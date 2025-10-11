@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<59835018631705b3709ca5c2061dea6f>>
+ * @generated SignedSource<<f25140000ce119bfb50cc86cacdebe18>>
  */
 
 "use strict";
@@ -327,7 +327,16 @@ __DEV__ &&
       return newKey;
     }
     function validateChildKeys(node) {
-      isValidElement(node) && node._store && (node._store.validated = 1);
+      isValidElement(node)
+        ? node._store && (node._store.validated = 1)
+        : "object" === typeof node &&
+          null !== node &&
+          node.$$typeof === REACT_LAZY_TYPE &&
+          ("fulfilled" === node._payload.status
+            ? isValidElement(node._payload.value) &&
+              node._payload.value._store &&
+              (node._payload.value._store.validated = 1)
+            : node._store && (node._store.validated = 1));
     }
     function isValidElement(object) {
       return (
@@ -573,9 +582,13 @@ __DEV__ &&
     function useMemoCache(size) {
       return resolveDispatcher().useMemoCache(size);
     }
+    function useEffectEvent(callback) {
+      return resolveDispatcher().useEffectEvent(callback);
+    }
     function releaseAsyncTransition() {
       ReactSharedInternals.asyncTransitions--;
     }
+    function addTransitionType() {}
     function enqueueTask(task) {
       if (null === enqueueTaskImpl)
         try {
@@ -855,6 +868,7 @@ __DEV__ &&
       var getCurrentStack = ReactSharedInternals.getCurrentStack;
       return null === getCurrentStack ? null : getCurrentStack();
     };
+    exports.Activity = REACT_ACTIVITY_TYPE;
     exports.Children = deprecatedAPIs;
     exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
@@ -862,6 +876,7 @@ __DEV__ &&
     exports.PureComponent = PureComponent;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
+    exports.ViewTransition = REACT_VIEW_TRANSITION_TYPE;
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
     exports.__COMPILER_RUNTIME = fnName;
@@ -986,6 +1001,7 @@ __DEV__ &&
         }
       };
     };
+    exports.addTransitionType = addTransitionType;
     exports.c = useMemoCache;
     exports.cache = function (fn) {
       return function () {
@@ -1128,9 +1144,7 @@ __DEV__ &&
       Object.seal(refObject);
       return refObject;
     };
-    exports.experimental_useEffectEvent = function (callback) {
-      return resolveDispatcher().useEffectEvent(callback);
-    };
+    exports.experimental_useEffectEvent = useEffectEvent;
     exports.forwardRef = function (render) {
       null != render && render.$$typeof === REACT_MEMO_TYPE
         ? console.error(
@@ -1294,7 +1308,7 @@ __DEV__ &&
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
     exports.unstable_ViewTransition = REACT_VIEW_TRANSITION_TYPE;
-    exports.unstable_addTransitionType = function () {};
+    exports.unstable_addTransitionType = addTransitionType;
     exports.unstable_getCacheForType = function (resourceType) {
       var dispatcher = ReactSharedInternals.A;
       return dispatcher
@@ -1339,6 +1353,7 @@ __DEV__ &&
         );
       return resolveDispatcher().useEffect(create, deps);
     };
+    exports.useEffectEvent = useEffectEvent;
     exports.useId = function () {
       return resolveDispatcher().useId();
     };
@@ -1388,7 +1403,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.2.0-native-fb-8d7b5e49-20250827";
+    exports.version = "19.3.0-native-fb-ead92181-20251010";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
