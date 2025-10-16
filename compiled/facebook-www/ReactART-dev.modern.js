@@ -1401,7 +1401,8 @@ __DEV__ &&
                 reusableComponentOptions
               )
             )
-          : performance.measure(trigger, reusableComponentOptions));
+          : performance.measure(trigger, reusableComponentOptions),
+        performance.clearMeasures(trigger));
     }
     function logComponentReappeared(fiber, startTime, endTime) {
       logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -1420,7 +1421,7 @@ __DEV__ &&
         if (null === alternate || alternate.child !== fiber.child)
           for (var child = fiber.child; null !== child; child = child.sibling)
             selfTime -= child.actualDuration;
-        wasHydrated =
+        selfTime =
           0.5 > selfTime
             ? wasHydrated
               ? "tertiary-light"
@@ -1435,46 +1436,65 @@ __DEV__ &&
                   : "primary-dark"
                 : "error";
         var props = fiber.memoizedProps;
-        selfTime = fiber._debugTask;
+        wasHydrated = fiber._debugTask;
         null !== props &&
         null !== alternate &&
         alternate.memoizedProps !== props
-          ? ((child = [resuableChangedPropsEntry]),
+          ? ((child = [reusableChangedPropsEntry]),
             (props = addObjectDiffToProperties(
               alternate.memoizedProps,
               props,
               child,
               0
             )),
-            1 < child.length &&
-              (props &&
-              !alreadyWarnedForDeepEquality &&
-              0 === (alternate.lanes & committedLanes) &&
-              100 < fiber.actualDuration
-                ? ((alreadyWarnedForDeepEquality = !0),
-                  (child[0] = reusableDeeplyEqualPropsEntry),
-                  (reusableComponentDevToolDetails.color = "warning"),
-                  (reusableComponentDevToolDetails.tooltipText =
-                    "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
-                : ((reusableComponentDevToolDetails.color = wasHydrated),
-                  (reusableComponentDevToolDetails.tooltipText = name)),
-              (reusableComponentDevToolDetails.properties = child),
-              (reusableComponentOptions.start = startTime),
-              (reusableComponentOptions.end = endTime),
-              null != selfTime
-                ? selfTime.run(
-                    performance.measure.bind(
-                      performance,
-                      "\u200b" + name,
-                      reusableComponentOptions
+            1 < child.length
+              ? (props &&
+                !alreadyWarnedForDeepEquality &&
+                0 === (alternate.lanes & committedLanes) &&
+                100 < fiber.actualDuration
+                  ? ((alreadyWarnedForDeepEquality = !0),
+                    (child[0] = reusableDeeplyEqualPropsEntry),
+                    (reusableComponentDevToolDetails.color = "warning"),
+                    (reusableComponentDevToolDetails.tooltipText =
+                      "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."))
+                  : ((reusableComponentDevToolDetails.color = selfTime),
+                    (reusableComponentDevToolDetails.tooltipText = name)),
+                (reusableComponentDevToolDetails.properties = child),
+                (reusableComponentOptions.start = startTime),
+                (reusableComponentOptions.end = endTime),
+                (fiber = "\u200b" + name),
+                null != wasHydrated
+                  ? wasHydrated.run(
+                      performance.measure.bind(
+                        performance,
+                        fiber,
+                        reusableComponentOptions
+                      )
+                    )
+                  : performance.measure(fiber, reusableComponentOptions),
+                performance.clearMeasures(fiber))
+              : null != wasHydrated
+                ? wasHydrated.run(
+                    console.timeStamp.bind(
+                      console,
+                      name,
+                      startTime,
+                      endTime,
+                      "Components \u269b",
+                      void 0,
+                      selfTime
                     )
                   )
-                : performance.measure(
-                    "\u200b" + name,
-                    reusableComponentOptions
-                  )))
-          : null != selfTime
-            ? selfTime.run(
+                : console.timeStamp(
+                    name,
+                    startTime,
+                    endTime,
+                    "Components \u269b",
+                    void 0,
+                    selfTime
+                  ))
+          : null != wasHydrated
+            ? wasHydrated.run(
                 console.timeStamp.bind(
                   console,
                   name,
@@ -1482,7 +1502,7 @@ __DEV__ &&
                   endTime,
                   "Components \u269b",
                   void 0,
-                  wasHydrated
+                  selfTime
                 )
               )
             : console.timeStamp(
@@ -1491,7 +1511,7 @@ __DEV__ &&
                 endTime,
                 "Components \u269b",
                 void 0,
-                wasHydrated
+                selfTime
               );
       }
     }
@@ -1538,11 +1558,11 @@ __DEV__ &&
               }
             }
           };
+          name = "\u200b" + name;
           debugTask
-            ? debugTask.run(
-                performance.measure.bind(performance, "\u200b" + name, fiber)
-              )
-            : performance.measure("\u200b" + name, fiber);
+            ? debugTask.run(performance.measure.bind(performance, name, fiber))
+            : performance.measure(name, fiber);
+          performance.clearMeasures(name);
         }
       }
     }
@@ -1579,15 +1599,14 @@ __DEV__ &&
                 }
               }
             };
-            (fiber = fiber._debugTask)
+            fiber = fiber._debugTask;
+            endTime = "\u200b" + name;
+            fiber
               ? fiber.run(
-                  performance.measure.bind(
-                    performance,
-                    "\u200b" + name,
-                    startTime
-                  )
+                  performance.measure.bind(performance, endTime, startTime)
                 )
-              : performance.measure("\u200b" + name, startTime);
+              : performance.measure(endTime, startTime);
+            performance.clearMeasures(endTime);
           }
         }
       } else
@@ -1748,6 +1767,7 @@ __DEV__ &&
               performance.measure.bind(performance, "Recovered", startTime)
             )
           : performance.measure("Recovered", startTime);
+        performance.clearMeasures("Recovered");
       }
     }
     function logErroredRenderPhase(startTime, endTime, lanes, debugTask) {
@@ -1831,6 +1851,7 @@ __DEV__ &&
               performance.measure.bind(performance, "Errored", startTime)
             )
           : performance.measure("Errored", startTime);
+        performance.clearMeasures("Errored");
       }
     }
     function logCommitPhase(
@@ -11802,6 +11823,8 @@ __DEV__ &&
         }
         switch (finishedWork.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (flags & 4) &&
               ((finishedWork = finishedWork.updateQueue),
@@ -11816,9 +11839,6 @@ __DEV__ &&
               )
                 (current = finishedWork[isViewTransitionEligible]),
                   (current.ref.impl = current.nextImpl);
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             0 !== (flags & 1024) &&
@@ -12704,7 +12724,10 @@ __DEV__ &&
         case 26:
         case 27:
         case 5:
+          var prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = prevOffscreenDirectParentIsHidden;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -12836,13 +12859,17 @@ __DEV__ &&
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+            _prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden =
             prevOffscreenSubtreeIsHidden || suspenseCallback;
+          offscreenDirectParentIsHidden =
+            _prevOffscreenDirectParentIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           retryQueue &&
             !suspenseCallback &&
@@ -12859,47 +12886,49 @@ __DEV__ &&
               componentEffectEndTime
             );
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                !suspenseCallback ||
-                  null === current ||
-                  retryQueue ||
-                  offscreenSubtreeIsHidden ||
-                  offscreenSubtreeWasHidden ||
-                  (recursivelyTraverseDisappearLayoutEffects(finishedWork),
-                  enableComponentPerformanceTrack &&
-                    0 !== (finishedWork.mode & 2) &&
-                    0 <= componentEffectStartTime &&
-                    0 <= componentEffectEndTime &&
-                    0.05 < componentEffectEndTime - componentEffectStartTime &&
-                    logComponentTrigger(
-                      finishedWork,
-                      componentEffectStartTime,
-                      componentEffectEndTime,
-                      "Disconnect"
-                    )),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            !suspenseCallback ||
+              null === current ||
+              retryQueue ||
+              offscreenSubtreeIsHidden ||
+              offscreenSubtreeWasHidden ||
+              (recursivelyTraverseDisappearLayoutEffects(finishedWork),
+              enableComponentPerformanceTrack &&
+                0 !== (finishedWork.mode & 2) &&
+                0 <= componentEffectStartTime &&
+                0 <= componentEffectEndTime &&
+                0.05 < componentEffectEndTime - componentEffectStartTime &&
+                logComponentTrigger(
+                  finishedWork,
+                  componentEffectStartTime,
+                  componentEffectEndTime,
+                  "Disconnect"
+                )),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
                   try {
-                    var instance = lanes.stateNode;
-                    suspenseCallback
-                      ? runWithFiberInDEV(lanes, hideInstance, instance)
-                      : runWithFiberInDEV(
-                          lanes,
-                          unhideInstance,
-                          lanes.stateNode,
-                          lanes.memoizedProps
-                        );
+                    (prevOffscreenDirectParentIsHidden = lanes.stateNode),
+                      suspenseCallback
+                        ? runWithFiberInDEV(
+                            lanes,
+                            hideInstance,
+                            prevOffscreenDirectParentIsHidden
+                          )
+                        : runWithFiberInDEV(
+                            lanes,
+                            unhideInstance,
+                            lanes.stateNode,
+                            lanes.memoizedProps
+                          );
                   } catch (error) {
                     captureCommitPhaseError(lanes, lanes.return, error);
                   }
@@ -12908,17 +12937,13 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance$jscomp$0 = lanes.stateNode;
+                    var instance = lanes.stateNode;
                     suspenseCallback
-                      ? runWithFiberInDEV(
-                          lanes,
-                          hideTextInstance,
-                          instance$jscomp$0
-                        )
+                      ? runWithFiberInDEV(lanes, hideTextInstance, instance)
                       : runWithFiberInDEV(
                           lanes,
                           unhideTextInstance,
-                          instance$jscomp$0,
+                          instance,
                           lanes.memoizedProps
                         );
                     trackHostMutation();
@@ -12930,12 +12955,12 @@ __DEV__ &&
                 if (null === current) {
                   lanes = root;
                   try {
-                    var instance$jscomp$1 = lanes.stateNode;
+                    var instance$jscomp$0 = lanes.stateNode;
                     suspenseCallback
                       ? runWithFiberInDEV(
                           lanes,
                           hideDehydratedBoundary,
-                          instance$jscomp$1
+                          instance$jscomp$0
                         )
                       : runWithFiberInDEV(
                           lanes,
@@ -12991,17 +13016,15 @@ __DEV__ &&
                 null === current ||
                 safelyDetachRef(current, current.return)),
             (flags = pushMutationContext()),
-            (instance = enableViewTransition && (lanes & 335544064) === lanes),
-            (instance$jscomp$0 = finishedWork.memoizedProps),
-            instance &&
+            (prevOffscreenDirectParentIsHidden =
+              enableViewTransition && (lanes & 335544064) === lanes),
+            (instance = finishedWork.memoizedProps),
+            prevOffscreenDirectParentIsHidden &&
               "none" !==
-                getViewTransitionClassName(
-                  instance$jscomp$0.default,
-                  instance$jscomp$0.update
-                ),
+                getViewTransitionClassName(instance.default, instance.update),
             recursivelyTraverseMutationEffects(root, finishedWork, lanes),
             commitReconciliationEffects(finishedWork),
-            instance &&
+            prevOffscreenDirectParentIsHidden &&
               null !== current &&
               viewTransitionMutationContext &&
               (finishedWork.flags |= 4),
@@ -15489,10 +15512,8 @@ __DEV__ &&
                       previousRenderStartTime
                     )
                   )
-                : performance.measure(
-                    isSpawnedUpdate,
-                    previousRenderStartTime
-                  ));
+                : performance.measure(isSpawnedUpdate, previousRenderStartTime),
+              performance.clearMeasures(isSpawnedUpdate));
           }
           blockingUpdateTime = -1.1;
           blockingUpdateType = 0;
@@ -15631,7 +15652,8 @@ __DEV__ &&
                       previousRenderStartTime
                     )
                   )
-                : performance.measure(debugTask, previousRenderStartTime))),
+                : performance.measure(debugTask, previousRenderStartTime),
+              performance.clearMeasures(debugTask))),
           (transitionUpdateTime = transitionStartTime = -1.1),
           (transitionUpdateType = 0),
           (transitionSuspendedTime = -1.1),
@@ -18053,7 +18075,7 @@ __DEV__ &&
         end: -0,
         detail: { devtools: reusableComponentDevToolDetails }
       },
-      resuableChangedPropsEntry = ["Changed Props", ""],
+      reusableChangedPropsEntry = ["Changed Props", ""],
       reusableDeeplyEqualPropsEntry = [
         "Changed Props",
         "This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner."
@@ -19763,6 +19785,7 @@ __DEV__ &&
       didWarnAboutName = {},
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
       inProgressLanes = null,
@@ -20119,10 +20142,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-ead92181-20251010",
+        version: "19.3.0-www-modern-85f415e3-20251015",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-ead92181-20251010"
+        reconcilerVersion: "19.3.0-www-modern-85f415e3-20251015"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20157,7 +20180,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-modern-ead92181-20251010";
+    exports.version = "19.3.0-www-modern-85f415e3-20251015";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

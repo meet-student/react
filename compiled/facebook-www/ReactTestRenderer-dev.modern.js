@@ -9674,6 +9674,8 @@ __DEV__ &&
               flags = firstChild.flags;
             switch (firstChild.tag) {
               case 0:
+              case 11:
+              case 15:
                 if (
                   0 !== (flags & 4) &&
                   ((firstChild = firstChild.updateQueue),
@@ -9683,9 +9685,6 @@ __DEV__ &&
                   for (current = 0; current < firstChild.length; current++)
                     (flags = firstChild[current]),
                       (flags.ref.impl = flags.nextImpl);
-                break;
-              case 11:
-              case 15:
                 break;
               case 1:
                 0 !== (flags & 1024) &&
@@ -10252,7 +10251,10 @@ __DEV__ &&
         case 26:
         case 27:
         case 5:
+          existingHiddenCallbacks = offscreenDirectParentIsHidden;
+          offscreenDirectParentIsHidden = !1;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+          offscreenDirectParentIsHidden = existingHiddenCallbacks;
           commitReconciliationEffects(finishedWork);
           flags & 512 &&
             (offscreenSubtreeWasHidden ||
@@ -10386,32 +10388,34 @@ __DEV__ &&
           suspenseCallback = null !== finishedWork.memoizedState;
           retryQueue = null !== current && null !== current.memoizedState;
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
-            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+            prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden,
+            _prevOffscreenDirectParentIsHidden = offscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden =
             prevOffscreenSubtreeIsHidden || suspenseCallback;
+          offscreenDirectParentIsHidden =
+            _prevOffscreenDirectParentIsHidden || suspenseCallback;
           offscreenSubtreeWasHidden =
             prevOffscreenSubtreeWasHidden || retryQueue;
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          offscreenDirectParentIsHidden = _prevOffscreenDirectParentIsHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
           commitReconciliationEffects(finishedWork);
-          if (flags & 8192)
-            a: for (
-              root = finishedWork.stateNode,
-                root._visibility = suspenseCallback
-                  ? root._visibility & ~OffscreenVisible
-                  : root._visibility | OffscreenVisible,
-                suspenseCallback &&
-                  (null === current ||
-                    retryQueue ||
-                    offscreenSubtreeIsHidden ||
-                    offscreenSubtreeWasHidden ||
-                    recursivelyTraverseDisappearLayoutEffects(finishedWork)),
-                current = null,
-                root = finishedWork;
-              ;
-
-            ) {
+          if (
+            flags & 8192 &&
+            ((root = finishedWork.stateNode),
+            (root._visibility = suspenseCallback
+              ? root._visibility & ~OffscreenVisible
+              : root._visibility | OffscreenVisible),
+            suspenseCallback &&
+              (null === current ||
+                retryQueue ||
+                offscreenSubtreeIsHidden ||
+                offscreenSubtreeWasHidden ||
+                recursivelyTraverseDisappearLayoutEffects(finishedWork)),
+            suspenseCallback || !offscreenDirectParentIsHidden)
+          )
+            a: for (current = null, root = finishedWork; ; ) {
               if (5 === root.tag) {
                 if (null === current) {
                   lanes = current = root;
@@ -15385,6 +15389,7 @@ __DEV__ &&
     var rootMutationContext = !1,
       offscreenSubtreeIsHidden = !1,
       offscreenSubtreeWasHidden = !1,
+      offscreenDirectParentIsHidden = !1,
       PossiblyWeakSet = "function" === typeof WeakSet ? WeakSet : Set,
       nextEffect = null,
       hostParent = null,
@@ -15705,10 +15710,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-ead92181-20251010",
+        version: "19.3.0-www-modern-85f415e3-20251015",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-ead92181-20251010"
+        reconcilerVersion: "19.3.0-www-modern-85f415e3-20251015"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -15844,5 +15849,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-modern-ead92181-20251010";
+    exports.version = "19.3.0-www-modern-85f415e3-20251015";
   })();
