@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d38aa3852dac15f9fb0a961410427aa7>>
+ * @generated SignedSource<<e6a764d231385e5cf5460b76189117b1>>
  */
 
 "use strict";
@@ -2078,7 +2078,8 @@ function logComponentTrigger(fiber, startTime, endTime, trigger) {
     (reusableComponentDevToolDetails.color = "warning"),
     (reusableComponentDevToolDetails.tooltipText = trigger),
     (reusableComponentDevToolDetails.properties = null),
-    performance.measure(trigger, reusableComponentOptions));
+    performance.measure(trigger, reusableComponentOptions),
+    performance.clearMeasures(trigger));
 }
 function logComponentReappeared(fiber, startTime, endTime) {
   logComponentTrigger(fiber, startTime, endTime, "Reconnect");
@@ -8833,6 +8834,8 @@ function commitBeforeMutationEffects(root, firstChild) {
         firstChild = root.flags;
         switch (root.tag) {
           case 0:
+          case 11:
+          case 15:
             if (
               0 !== (firstChild & 4) &&
               ((firstChild = root.updateQueue),
@@ -8843,9 +8846,6 @@ function commitBeforeMutationEffects(root, firstChild) {
                 var _eventPayloads$ii = firstChild[ii];
                 _eventPayloads$ii.ref.impl = _eventPayloads$ii.nextImpl;
               }
-            break;
-          case 11:
-          case 15:
             break;
           case 1:
             if (0 !== (firstChild & 1024) && null !== current) {
@@ -13334,10 +13334,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1629 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-ead92181-20251010",
+    version: "19.3.0-native-fb-85f415e3-20251015",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-ead92181-20251010"
+    reconcilerVersion: "19.3.0-native-fb-85f415e3-20251015"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1629.rendererConfig = extraDevToolsConfig);
